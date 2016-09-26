@@ -9,9 +9,11 @@ The eye tracking algorithm works as follows. Every frame is smoothed using a Gau
 
 After eye-tracking is complete the results are saved in /CroppedVideos and can be evaluated using the script runPupilPostProcessing.
 
-Collaborators
+Contributors
 
 Guido Meijer, Stephan Grzelkowski, Gwylan Scheeren, Jorrit Montijn
+Cognitive & Systems Neuroscience Lab
+University of Amsterdam
 
 References
 
