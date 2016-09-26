@@ -132,7 +132,11 @@ for k = FrameStart : FrameStop
         matFrame = ROImask.*mat2gray(matMovie_h(:,:,k));
         
         %apply radial transform on the current frame
-        f = frst2d(matFrame,radii,10, 0.25, 'bright');
+        if strcmp(cfg.strPupilColor, 'white')
+            f = frst2d(matFrame,radii,10, 0.25, 'bright');
+        elseif strcmp(cfg.strPupilColor, 'black')
+            f = frst2d(matFrame,radii,10, 0.25, 'dark');
+        end 
         
         %find the center point of the pupil from symmetry transform
         [cy,cx] = find(f == max(max(f)));

@@ -141,7 +141,13 @@ for k = FrameStart : FrameStop
     matFrame = ROImask.*mat2gray(matMovie_h(:,:,k));
     
     %apply radial transform on the current frame
-    f = frst2d(matFrame,radii,10, 0.25, 'bright');
+    if strcmp(cfg.strPupilColor, 'white')
+        f = frst2d(matFrame,radii,10, 0.25, 'bright');
+    elseif strcmp(cfg.strPupilColor, 'black')
+        f = frst2d(matFrame,radii,10, 0.25, 'dark');
+    else
+        error('strPupilColor should be set to white or black');
+    end
     
     %find the center point of the pupil from symmetry transform
     [cy,cx] = find(f == max(max(f)));
@@ -175,7 +181,6 @@ for k = FrameStart : FrameStop
         
         %remove indeces that lie outside ROI
         idxRay = idxRay(rayInt ~= 0);
-        
         
         %apply directional filters for sobel transform (edge detection)
         Sx = imfilter(matFrame,filterX);

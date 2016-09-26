@@ -6,11 +6,11 @@
 %     BuildPreProBatch
 %
 %   INPUT
-%     rootDirectory: the general Eye-Tracking directory
-%     strPupilColor: set to 'black' when the pupil is illuminated by an infra-red light source 
-%                    and appears black on the video. Set to 'white' when using two-photon imaging 
-%                    and the IR light source is the laser of the two-photon scanner, 
-%                    making the pupil appear white on the video.
+%     set the appropriate directories and filename for Queue file
+%     sourceDirectory: the general Eye-Tracking directory
+%     sParams.strRawVideoPath: where the raw video's are located
+%     sParams.QueuePath (optional, default: sourceDirectory): set directory to save queuefile to a directory other than sourceDirectory
+%     sParams.SaveName: specify the filename for the Queuefile
 %
 %   OUTPUT
 %     Creates a queue-file according to set filename (sParams.SaveName) in the directory specified in (sParams.QueuePath)
@@ -28,8 +28,7 @@ sParams.QueuePath = rootDirectory; %# directory to save queue file in, if 'comme
 sParams.SaveName = 'Queuefile';
 
 %set parameters
-sParams.boolQueueEntryOverwrite = false;
-sParams.strPupilColor = 'white'; %white or black
+sParams.boolQueueEntryOverwrite = 0;
 
 % Initialize values
 if ~exist('sParams.QueuePath','var')
@@ -78,7 +77,6 @@ for i = 1:size(flist,1)
     if sParams.boolQueueEntryOverwrite || (~sParams.boolQueueEntryOverwrite && isempty(indQueue))
         %prepare Qcfg struct
         Qcfg.PrePro = true;
-        Qcfg.strPupilColor = sParams.strPupilColor;
         pathparts = regexp(Files(i).filename, '\', 'split');
         Qcfg.strSes = pathparts{end-1};
         Qcfg.strRec = pathparts{end}(end-8:end-4);
