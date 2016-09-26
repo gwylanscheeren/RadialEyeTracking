@@ -12,8 +12,8 @@ After eye-tracking is complete the results are saved in /CroppedVideos and can b
 Contributors
 
 Guido Meijer, Stephan Grzelkowski, Gwylan Scheeren, Jorrit Montijn
-Cognitive & Systems Neuroscience Lab
-University of Amsterdam
+
+Cognitive & Systems Neuroscience Lab, University of Amsterdam
 
 References
 
