@@ -9,13 +9,13 @@ The eye tracking algorithm works as follows. Every frame is smoothed using a Gau
 
 After eye-tracking is complete the results are saved in /CroppedVideos and can be evaluated using the script runPupilPostProcessing.
 
-Contributors
+# Contributors
 
 Guido Meijer, Stephan Grzelkowski, Gwylan Scheeren, Jorrit Montijn
 
 Cognitive & Systems Neuroscience Lab, University of Amsterdam
 
-References
+# References
 
 Li, D., Winfield, D., and Parkhurst, D.J. (2005). Starburst: A hybrid algorithm for video-based eye tracking combining feature-based and model-based approaches. In 2005 IEEE Computer Society Conference on Computer Vision and Pattern Recognition (CVPR’05)-Workshops, (IEEE), pp. 79–79.
 
