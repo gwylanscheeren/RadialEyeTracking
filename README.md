@@ -8,6 +8,7 @@ From the center a number of rays is projected in different directions with equal
 
 
 References
+
 Li, D., Winfield, D., and Parkhurst, D.J. (2005). Starburst: A hybrid algorithm for video-based eye tracking combining feature-based and model-based approaches. In 2005 IEEE Computer Society Conference on Computer Vision and Pattern Recognition (CVPR’05)-Workshops, (IEEE), pp. 79–79.
 
 Loy, G., and Zelinsky, A. (2003). Fast radial symmetry for detecting points of interest. IEEE Transactions on Pattern Analysis and Machine Intelligence 25, 959–973.
