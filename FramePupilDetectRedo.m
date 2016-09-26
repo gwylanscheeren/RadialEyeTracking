@@ -1,4 +1,4 @@
-function sEyeTracking = FramePupilDetectStarburstRedo(cfg,N,radii,o)
+function sEyeTracking = FramePupilDetectRedo(cfg,N,radii,o)
 % Reprocesses the sEyeTracking for time frame chosen in
 % runPupilPostProcessingStarburst
 %
@@ -45,29 +45,25 @@ function sEyeTracking = FramePupilDetectStarburstRedo(cfg,N,radii,o)
 %       Statistics Toolbox
 %       fitellipse
 %       frst2d
-%
-%   VERSIONS
-%       Adapted by Gwylan Scheeren |21|3|2015| Universiteit van Amsterdam
-%       18-4-2015 Added ROI selection mask
-%       12-7-2015 Changed minimal number of pixels threshold for pupil requirement of 3.3%
-%               from whole frame to 3.3% of the region of interest
-%       Modified by Stephan Grzelkowski (07/03/2016) Universiteit van Amsterdam 
-%               Changed pupil detection method using Sobel Transform for
-%               edge detection and a starburst approach
-%     
-%      
-
-
-
 
 warning('off','all')
+
+%Initialize default settings
+if nargin < 2
+    N = 16;
+    radii = 5:2:21;
+    o = 2;
+elseif nargin < 3
+    radii = 5:2:21;
+    o = 2;
+elseif nargin < 4
+    o = 2;
+end   
 
 %Preassign directional filters for Sobel filtering
 filterX = [-1 0 1;-2 0 2;-1 0 1];
 filterY = [-1 -2 -1;0 0 0;1 2 1];
 
-
-%% 
 %supress warnings about graphics versions
 if verLessThan('matlab', '8.4')
     warning('off','YMA:export_fig:issue45')
@@ -75,13 +71,9 @@ else
     warning('off','MATLAB:graphicsversion:GraphicsVersionRemoval')
 end
 
-
-
-
-%%
+%Load in video data
+fprintf('Loading in cropped video data..\n')
 sLoad = load(cfg.CroppedVideo);
-
-
 CropFrame = cfg.Eyetrack.CropFrame;
 
 if isfield(cfg.Eyetrack,'TimeFrame')
@@ -104,23 +96,20 @@ FrameStart = TimeFrame(1); FrameStop = TimeFrame(2);
 %% Perform Eye-tracking on specified Time-Frame
 
 %crop movie to selected time points +/- intPupFrameRange, using the frame offset between cropped movie and first frame used for eye-tracking
-
 matMovie = sLoad.matMovie(:,:,CropFrame(1):CropFrame(2));
-
 clear sLoad
 
 % pre allocate for gaussian filter
 matMovie_h = zeros(size(matMovie));
 
-
 % apply gaussian filter for every frame
+fprintf('Applying Gaussian filter to all frames..\n');
+hFilt = fspecial('gaussian', [3 3], 1);
 for f = 1 : size(matMovie,3)
-    matMovie_h(:,:,f) = imgaussfilt(matMovie(:,:,f),2);
+    matMovie_h(:,:,f) = imfilter(matMovie(:,:,f), hFilt);
 end
 
-
 %pre-allocate output
-
 vecPosX = cfg.sOldEyeTracking.vecPosX;
 vecPosY = cfg.sOldEyeTracking.vecPosY;
 vecArea = cfg.sOldEyeTracking.vecArea;
@@ -147,22 +136,18 @@ for k = FrameStart : FrameStop
         
         %find the center point of the pupil from symmetry transform
         [cy,cx] = find(f == max(max(f)));
-        
-        
         [x,y] = meshgrid(1:n,1:m);
         
         %center meshgrid for the centerpoint of the symmetry transform
         x = x - cx;
         y = y - cy;
         
-        
         %polar transform around center point
         [theta,rho] = cart2pol(x,y);
         
         
         %% Ray Projection
-        
-        
+       
         %preassign matrices for sobel thressholding and intersect coordinates
         idx_threshhold = NaN(N,1);
         xcoord = NaN(N,1);
@@ -174,24 +159,19 @@ for k = FrameStart : FrameStop
         for i = -pi + (pi / (N / 2)): (pi / (N / 2))  : pi
             
             idxRay = find(theta >= i - 0.1 & theta <= i + 0.1);
-            
             rayInt = matFrame(idxRay);
-            
             idxRay = idxRay(rayInt ~= 0);
-            
             
             %apply directional filters
             Sx = imfilter(matFrame,filterX);
             Sy = imfilter(matFrame,filterY);
             S = sqrt(Sx.^2 + Sy.^2);
             
-            
             rho_idx_comb = zeros(length(idxRay),2);
             rho_idx_comb(:,1) = rho(idxRay);
             rho_idx_comb(:,2) = idxRay;
             rho_idx_sort = sortrows(rho_idx_comb);
             idx_sort = rho_idx_sort(:,2);
-            
             
             rest = 1 : floor(length(idx_sort) * 0.75) ;
             idx_rest = idx_sort(rest);
@@ -216,7 +196,6 @@ for k = FrameStart : FrameStop
         
         %% Ellipse fitting
         
-        
         mean_dist = mean(dist);
         std_dist = std(dist);
         dist_std_all(k) = std_dist;
@@ -230,8 +209,6 @@ for k = FrameStart : FrameStop
         xcoord = xcoord + cx;
         ycoord = ycoord + cy;
         
-        
-        
         %store coordinates in ellipse for fit function
         ellipse_coord = NaN(2,length(xcoord));
         ellipse_coord(1,:) = xcoord';
@@ -240,7 +217,6 @@ for k = FrameStart : FrameStop
         %remove columns with nans to avoid errors of ellipse fitting
         [~, column]=find(isnan(ellipse_coord));
         ellipse_coord(:,column) = [];
-        
         
         %plot the ellipse if its plottable
         try
@@ -269,9 +245,6 @@ for k = FrameStart : FrameStop
     
     
 end
-
-
-
 
 %put in output structure
 sNewEyeTracking = struct();

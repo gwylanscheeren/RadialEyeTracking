@@ -46,7 +46,7 @@ tic;
 %% Preproces
 strSes = cfg.strSes;
 strRec = cfg.strRec;
-intRec = cfg.intRec;
+
 %source/target data
 strTargetPath = cfg.FileSavePath;
 vecRect = cfg.PreProParam.vecRect;
@@ -58,11 +58,6 @@ strSourceFile = cfg.RawVideosourceFile;
 if ~isdir(strTargetPath)
     mkdir(strTargetPath);
 end
-% 
-% %make temp dir
-% if ~isdir(strTempPath)
-%     mkdir(strTempPath);
-% end
 
 % Cropping movie
 intMaxFrameLoad = 1000;
@@ -77,7 +72,7 @@ intFramesTot = round(abs(sVideoInit.nrFramesTotal)); %# calculate estimated numb
 %# find actual nrFramesTotal by letting mmread exceed the total number of frames
 % disable warnings
 warning('off','mmread:general');
-increment = 10000;
+increment = 1000;
 intFrame = (intFramesTot-increment):intFramesTot;
 lastFrameIdentified = 0;
 while ~lastFrameIdentified
@@ -147,69 +142,6 @@ sVideoAll.rate = sVideoAll.nrFramesTotal./sVideoAll.totalDuration;
 sVideoAll.width = size(matMovie,1);
 sVideoAll.height = size(matMovie,2);
 sVideoAll = rmfield(sVideoAll,'skippedFrames');
-
-
-    
-%     %save data to temp file
-%     sVideo = rmfield(sVideo,'frames');
-%     strSaveTempFile = [strTempPath filesep 'TMP_videopart_' sprintf('%03d',intPart) '.mat'];
-%     save(strSaveTempFile, 'sVideo', 'matMovie');
-%     
-%     %print progress every 10 parts and for the last part & update progress bar
-%     if intPart == 1 || mod(intPart,10) == 0 || intPart == intTotParts
-%         fprintf('Cropped part %d of %d [%s] for file %s%s%s\n',intPart,intTotParts,getTime,strSes,'\',strRec);
-%     end
-%     if exist('progressbar','file') == 2; progressbar([],[],intPart/intTotSteps,intPart/intTotParts); end % Update 2nd bar
-% end
-
-% %% concatenate everything
-% %get files
-% sDir = dir(sprintf('%s%sTMP_videopart_*.mat',strTempPath,filesep));
-% sVideoAll = rmfield(sVideo,'frames');
-% clear sVideo;
-% matMovie = [];
-% sVideoAll.times =[];
-% 
-% %loop through files and put results in sVideoAll
-% for intPart = 1:intTotParts
-%     %get file, load it & append to end of aggregate
-%     strFile = [strTempPath filesep sDir(intPart).name];
-%     sTemp = load(strFile);
-%     if ~isfield(sTemp.sVideo,'matMovie')
-%         sTemp.sVideo.matMovie = sTemp.matMovie;
-%     end
-%     matMovie = cat(3, matMovie, sTemp.sVideo.matMovie);
-%     sVideoAll.times = cat(2, sVideoAll.times, sTemp.sVideo.times);
-%     
-%     %delete temp file
-%     delete(strFile);
-%     
-%     %print progress every 10 parts and for the last part & update progress bars
-%     if intPart == 1 || mod(intPart,10) == 0 || intPart == intTotParts
-%         fprintf('Concatenated part %d of %d [%s] for file %s%s%s\n',intPart,intTotParts,getTime,strSes,'\',strRec);
-%     end
-%     if exist('progressbar','file') == 2; progressbar([],[],[],[],intPart/intTotParts); end % Update 3rd bar
-%     if exist('progressbar','file') == 2; progressbar([],[], (intTotParts + (intPart/intTotParts)) /intTotSteps); end % Update 1st bar
-% end
-% if exist('progressbar','file') == 2; progressbar([],[],intTotSteps/intTotSteps); end % Update 1st bar
-% 
-% %remove empty frames
-% vecM=squeeze(mean(mean(matMovie,1),2));
-% matMovie = matMovie(:,:,vecM~=0);
-% 
-% %store cropped polygon ROImask in output struct
-% sVideoAll.ROImask = ROImask;
-% 
-% %update video meta-data
-% sVideoAll.rate = sVideoAll.nrFramesTotal./sVideoAll.totalDuration;
-% sVideoAll.width = size(matMovie,1);
-% sVideoAll.height = size(matMovie,2);
-% sVideoAll = rmfield(sVideoAll,'skippedFrames');
-% 
-% %remove temporary directory
-% % disable warnings
-% warning('off','MATLAB:RMDIR:RemovedFromPath');
-% rmdir(strTempPath);
 
 t = toc;
 strDuration = sec2hmsstring(t);

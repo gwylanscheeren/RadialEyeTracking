@@ -4,7 +4,7 @@
 %Written by Gwylan Scheeren
 %Modified by Guido Meijer
 
-function runPupilPostProcessingStarburst
+function runPupilPostProcessing
     
     % clear workspace, figures and command window
     clear all
@@ -15,8 +15,7 @@ function runPupilPostProcessingStarburst
     global intCurrentFrame sMovie vecTimeStamps gui oldpointer ROImask cfg sEyeTracking sTempEyeTracking FilePath cropppedVideoPath SesPath cellSignalTypes Reprocess FileSourcePath vecArea vecPosX vecPosY h2 h3 TimeFrameSelection Areacolor Areacolor1 Areacolor2 Areatextcolor1 Areatextcolor2 Eyecolor Eyecolor1 Eyecolor2 Eyetextcolor1 Eyetextcolor2 g strProp vecA vecB vecAlpha vecZ limit
     
     % set paths
-    cropppedVideoPath = 'C:\Users\Stephan\Desktop\Stage\TestCroppedVideos'; %set initial file path
-    SesPath = 'C:\Users\Stephan\Desktop\Stage\TestSessionFiles'; %set initial file path
+    cropppedVideoPath = 'B:\EyeTracking\AudioVisualPassive\CroppedVideos'; %set initial file path
 
     % load data
     LoadEyetracking;
@@ -509,7 +508,7 @@ function runPupilPostProcessingStarburst
         o = str2double(oString);  
         %Perform eye-tracking on selected timeframe
         
-        sEyeTracking = FramePupilDetectStarburstRedo(Qcfg,rays,radiiStart:radiiStep:radiiStop,o);
+        sEyeTracking = FramePupilDetectRedo(Qcfg,rays,radiiStart:radiiStep:radiiStop,o);
 
         %Update vectors and UI
         ROImask = Qcfg.Eyetrack.ROImask;
