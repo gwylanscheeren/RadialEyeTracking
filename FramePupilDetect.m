@@ -288,10 +288,8 @@ sNewEyeTracking.vecB = vecB;
 sNewEyeTracking.vecArea = vecArea;
 sNewEyeTracking.Frame = CropFrame;
 sNewEyeTracking.vecAlpha = vecAlpha;
-
-
 sEyeTracking = sNewEyeTracking;
-toc 
+
 strDuration = sec2hmsstring(t);
 fprintf('Finished processing %s%s in %s [%s]\n',cfg.strSes,cfg.strRec,strDuration,getTime);
 
