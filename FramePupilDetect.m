@@ -130,7 +130,7 @@ vecAlpha(FrameStart:FrameStop) = NaN(size(matMovie,3),1);
 intFrames = TimeFrame(2)-TimeFrame(1)+1;
 
 %Init current progress for progress display
-curProg = 5;
+curProg = 0;
 figure(1);
 
 %loop through frames for detection
@@ -209,7 +209,7 @@ for k = FrameStart : FrameStop
             ycoord(j) = y(idx_thresh(1));
         end
         
-        %update n
+        %increment counter
         j = j + 1;
         
     end
@@ -257,12 +257,11 @@ for k = FrameStart : FrameStop
 
     end
     
-    %Print progress in command window 
+    %Print progress in command window and plot intermittend result
     progress = round(((k - FrameStart + 1) / intFrames) * 100);
-    
-    if (mod(progress,5) == 0) && progress == curProg
-        fprintf('%d%% of the pupil detection has been completed\n',progress)
+    if progress == curProg
         curProg = curProg + 5;
+        fprintf('%d%% of the pupil detection has been completed\n',progress)
         figure(1); hold on; 
         imagesc(matMovie_h(:,:,k)); 
         colormap('grey'); axis ij; axis off;
@@ -271,25 +270,27 @@ for k = FrameStart : FrameStop
         set(h, 'LineWidth', 2, 'Color', [1 0 0]);
         title(sprintf('Frame %d of %d [%d%%]', k, intFrames, progress));
         hold off;
+        pause(0.1);
     end
      
 end
 
 %put in output structure
-sNewEyeTracking = struct();
-sNewEyeTracking.strSes = cfg.strSes;
-sNewEyeTracking.strRec = cfg.strRec;
-sNewEyeTracking.intRec = str2double(cfg.strRec(end-1:end));
-sNewEyeTracking.vecZ = vecZ; 
-sNewEyeTracking.vecPosX = vecPosX;
-sNewEyeTracking.vecPosY = vecPosY;
-sNewEyeTracking.vecA = vecA;
-sNewEyeTracking.vecB = vecB;
-sNewEyeTracking.vecArea = vecArea;
-sNewEyeTracking.Frame = CropFrame;
-sNewEyeTracking.vecAlpha = vecAlpha;
-sEyeTracking = sNewEyeTracking;
+sEyeTracking = struct();
+sEyeTracking.strSes = cfg.strSes;
+sEyeTracking.strRec = cfg.strRec;
+sEyeTracking.intRec = str2double(cfg.strRec(end-1:end));
+sEyeTracking.vecZ = vecZ; 
+sEyeTracking.vecPosX = vecPosX;
+sEyeTracking.vecPosY = vecPosY;
+sEyeTracking.vecA = vecA;
+sEyeTracking.vecB = vecB;
+sEyeTracking.vecArea = vecArea;
+sEyeTracking.Frame = CropFrame;
+sEyeTracking.vecAlpha = vecAlpha;
+sEyeTracking.strPupilColor = cfg.strPupilColor;
 
+close(1);
 strDuration = sec2hmsstring(t);
 fprintf('Finished processing %s%s in %s [%s]\n',cfg.strSes,cfg.strRec,strDuration,getTime);
 

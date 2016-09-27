@@ -117,12 +117,11 @@ vecZ = cfg.sOldEyeTracking.vecZ;
 vecA = cfg.sOldEyeTracking.vecA;
 vecB = cfg.sOldEyeTracking.vecB;
 vecAlpha = cfg.sOldEyeTracking.vecAlpha;
-dist_std_all = NaN(size(matMovie,3),1);
 
 [m,n,~] = size(matMovie);
 
 %Init progress display 
-curProg = 5;
+curProg = 0;
 
 %loop through frames for detection
 for k = FrameStart : FrameStop
@@ -192,7 +191,7 @@ for k = FrameStart : FrameStop
                 ycoord(j) = y(idx_thresh(1));
             end
             
-            %update n
+            %increment counter
             j = j + 1;
             
         end
@@ -200,29 +199,31 @@ for k = FrameStart : FrameStop
         
         %% Ellipse fitting
         
-        mean_dist = mean(dist);
-        std_dist = std(dist);
-        dist_std_all(k) = std_dist;
-        
+        %calculate mean and standard deviation and exclude outliers based on
+        %distance to center point and std.dev multiplier "o"
+        mean_dist = nanmean(dist);
+        std_dist = nanstd(dist);
+
         idx_outliers = find(dist <= mean_dist - (std_dist * o) | dist >= mean_dist + (std_dist * o) );
-        %dist(idx_outliers) = [];
         xcoord(idx_outliers) = [];
         ycoord(idx_outliers) = [];
-        
+
         %Decenter the data back to original coordinates
         xcoord = xcoord + cx;
         ycoord = ycoord + cy;
-        
+
         %store coordinates in ellipse for fit function
         ellipse_coord = NaN(2,length(xcoord));
         ellipse_coord(1,:) = xcoord';
         ellipse_coord(2,:) = ycoord';
-        
+
         %remove columns with nans to avoid errors of ellipse fitting
         [~, column]=find(isnan(ellipse_coord));
         ellipse_coord(:,column) = [];
-        
-        %plot the ellipse if its plottable
+
+
+        %calculate the ellipse points using fitellipse and save up fitellipse
+        %can cause errors when data is not fittable. 
         try
             [z, a, b, alpha] = fitellipse(ellipse_coord);
             %calculate and save pupil area
@@ -232,45 +233,40 @@ for k = FrameStart : FrameStop
             vecA(k) = a;
             vecB(k) = b;
             vecAlpha(k) = alpha;
-            vecPosX(k) = z(1);
-            vecPosY(k) = z(2);
+            vecPosX(k) = z(1); 
+            vecPosY(k) = z(2); 
         catch
-            
+
         end
+
+        %Print progress in command window
+        progress = round(((k - FrameStart + 1) / intFrames) * 100);
+        if progress == curProg
+            curProg = curProg + 5;
+            fprintf('%d%% of the pupil detection has been completed\n',progress)
+        end
+    
     end
-    
-    %Print progress in command window 
-    progress = round(((k - FrameStart + 1) / intFrames) * 100);
-    
-    if (mod(progress,5) == 0) && progress == curProg 
-        fprintf('%d%% of the pupil detection has been completed\n',progress)
-        curProg = curProg + 5;
-    end
-    
-    
+
 end
 
 %put in output structure
-sNewEyeTracking = struct();
-sNewEyeTracking.strSes = cfg.strSes;
-sNewEyeTracking.strRec = cfg.strRec;
-sNewEyeTracking.intRec = str2double(cfg.strRec(end-1:end));
-sNewEyeTracking.vecZ = vecZ; 
-sNewEyeTracking.vecPosX = vecPosX;
-sNewEyeTracking.vecPosY = vecPosY;
-sNewEyeTracking.vecA = vecA;
-sNewEyeTracking.vecB = vecB;
-sNewEyeTracking.vecArea = vecArea;
-sNewEyeTracking.Frame = CropFrame;
-sNewEyeTracking.vecAlpha = vecAlpha;
-sNewEyeTracking.matMask = cfg.sOldEyeTracking.matMask;
+sEyeTracking = struct();
+sEyeTracking.strSes = cfg.strSes;
+sEyeTracking.strRec = cfg.strRec;
+sEyeTracking.intRec = str2double(cfg.strRec(end-1:end));
+sEyeTracking.vecZ = vecZ; 
+sEyeTracking.vecPosX = vecPosX;
+sEyeTracking.vecPosY = vecPosY;
+sEyeTracking.vecA = vecA;
+sEyeTracking.vecB = vecB;
+sEyeTracking.vecArea = vecArea;
+sEyeTracking.Frame = CropFrame;
+sEyeTracking.vecAlpha = vecAlpha;
 
-sEyeTracking = sNewEyeTracking;
 
 % restore warnings
 warning('on','all')
-end
-
 
 
 

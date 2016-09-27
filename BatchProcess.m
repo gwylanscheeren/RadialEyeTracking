@@ -51,24 +51,24 @@ for i = 1:size(fLoad.Queue,2)
 end
 croppedQueuelist = arrayfun(@(x) [x.cfg.FileSavePath sprintf('%s_%s%s','croppedvideo',x.cfg.strSes,x.cfg.strRec) '.mat'],Queue,'UniformOutput',0);
 eyetrackQueuelist = arrayfun(@(x) [x.cfg.FileSavePath sprintf('EyeTrackData_%s%s',x.cfg.strSes,x.cfg.strRec) '.mat'],Queue,'UniformOutput',0);
-croppedvideoindex = find(croppedvideoindex);
-eyetrackvideoindex = find(eyetrackvideoindex);
 
 [croppedSelection,v] = listdlg('PromptString',{'Previously saved cropped videos found for unselected entries,','select them to re-prepocess and overwrite:'},...
-                'InitialValue',croppedvideoindex,...
+                'InitialValue',find(croppedvideoindex)+1,...
                 'SelectionMode','multiple',...
-                'ListString',croppedQueuelist,...
+                'ListString',[{'..'}, croppedQueuelist],...
                 'ListSize',[500 300]);
 if v == 0; error('Cancelled'); end
+croppedSelection = croppedSelection - 1;
+if croppedSelection == 0; croppedSelection = []; end;
 
 [eyetrackSelection,v] = listdlg('PromptString',{'Previously saved eye tracking files found for unselected entries,','select them to re-perform eye tracking and overwrite:'},...
-                'InitialValue',eyetrackvideoindex,...
+                'InitialValue',find(eyetrackvideoindex)+1,...
                 'SelectionMode','multiple',...
-                'ListString',eyetrackQueuelist,...
+                'ListString',[{'..'}, eyetrackQueuelist],...
                 'ListSize',[500 300]);
 if v == 0; error('Cancelled'); end
-
-
+eyetrackSelection = eyetrackSelection - 1;
+if eyetrackSelection == 0; eyetrackSelection = []; end;
 
 
 %% Start Pre-Processing of selected files
@@ -77,7 +77,7 @@ if numel(croppedSelection) > 0
     fprintf('Started pre-processing of %d sessions [%s]\n',numel(croppedSelection),getTime);
     for i = croppedSelection
         cnt1 = cnt1 + 1;
-        fprintf('\nStarted pre-processing %s%s [%d/%d] [%s]\n',Queue(i).cfg.strSes,Queue(i).cfg.strRec,cnt1,numel(croppedSelection),getTime);
+        fprintf('\nStarted pre-processing %s%s [%d/%d] [%s]\n', Queue(i).cfg.strSes, Queue(i).cfg.strRec,cnt1,numel(croppedSelection), getTime);
         [sVideoAll, matMovie] = RunEyeDetectPrePro(Queue(i).cfg);
         fprintf('Saving croppedvideo for session %s%s to %s [%s]\n',Queue(i).cfg.strSes,Queue(i).cfg.strRec,Queue(i).cfg.FileSavePath,getTime);
         Queue(i).cfg.CroppedVideo = [Queue(i).cfg.FileSavePath sprintf('%s_%s%s','croppedvideo',Queue(i).cfg.strSes,Queue(i).cfg.strRec) '.mat'];

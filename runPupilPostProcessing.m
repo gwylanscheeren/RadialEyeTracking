@@ -1,8 +1,6 @@
 %This function starts a GUI which can be used for post-processing of eye
 %tracking data
-%
-%Written by Gwylan Scheeren
-%Modified by Guido Meijer
+
 
 function runPupilPostProcessing
     
@@ -54,8 +52,7 @@ function runPupilPostProcessing
     gframeline = line([intCurrentFrame intCurrentFrame],get(gca,'YLim'),'Color','g','LineWidth',1,'LineStyle','--');
     axframes;
     glinetext = text(intCurrentFrame,0.55,sprintf('| <- selected frame: %d',intCurrentFrame));
-
-    
+   
     
     %% Create all sliders and buttons
     
@@ -74,20 +71,12 @@ function runPupilPostProcessing
     set(sldframe2,'TooltipString',sldframe2Tooltip);
 
     % Create push button for frame selection
-    uicontrol('Parent',gui,'Style', 'pushbutton', 'String', 'Select single frame','FontSize',11,'Value',intCurrentFrame,'Units','normalized','Position', [.24 .56 .18 .05],'Callback', @SelectSingleFrameFrameplot);
+    uicontrol('Parent',gui,'Style', 'pushbutton', 'String', 'Select single frame','FontSize',11,'Value',intCurrentFrame,'Units','normalized','Position', [.02 .56 .40 .05],'Callback', @SelectSingleFrameFrameplot);
 
     % create pop-up menu with all different selectable signal types
     uicontrol('Parent',gui,'Style', 'text','BackgroundColor',[.5 .7 1],'FontSize',11,'String', 'Signal selection','Units','normalized','Position', [.5 .07 .16 .04]);
     signalpopup1 = uicontrol('Parent',gui,'Style', 'popup','ForegroundColor',[0 0 1],'Tag','1','String', cellSignalTypes,'FontSize',10,'Units','normalized','Position', [.5 .02 .16 .05],'Callback', @signalselection);
     set(signalpopup1,'Value',1);
-
-%     % create push button
-%     btnROIswitch = uicontrol('Parent',gui,'Style', 'togglebutton','BackgroundColor',[0 .5 .7],'String','ROImask ON','ForegroundColor','w','FontSize',9,'Units','normalized','Position', [.02 .64 .16 .06],'Callback', @switchROImask);
-%     if ~exist('m'); set(btnROIswitch,'Visible','on'); end
-%     btnEyeswitch = uicontrol('Parent',gui,'Style', 'togglebutton','BackgroundColor',[0 .5 .7],'String','Eye-mask ON','ForegroundColor','w','FontSize',9,'Units','normalized','Position', [.02 .58 .16 .06],'Callback', @switchEyemask);
-%     if ~exist('r'); set(btnEyeswitch,'Visible','on'); end
-%     uicontrol('Parent',gui,'Style', 'togglebutton','BackgroundColor',[.7 .7 .3],'String','Ses Events ON','ForegroundColor','w','FontSize',9,'Units','normalized','Position', [.24 .64 .16 .06],'Callback', @switchSesEvents);
-%     
 
     % push buttons for filtering, removal of 0s and setting to NaN
     uicontrol('Parent',gui,'Style', 'pushbutton', 'String', 'Remove 0''s','FontSize',10,'Value',intCurrentFrame,'Units','normalized','Position', [.55 .92 .3 .06],'Callback', @doRemoveZeros);
@@ -97,17 +86,9 @@ function runPupilPostProcessing
         
     % create push buttons for redraw area, redo eye tracking and redo
     % pre-processing
-    
-    
+
     uicontrol('Parent',gui,'Style', 'pushbutton','Tag','now', 'String', 'Re-perform EyeTracking','FontSize',10,'Value',intCurrentFrame,'Units','normalized','Position', [.55 .68 .3 .06],'Callback', @Process);
-    
-    
-    
-    
-        %TrackSensetooltip = sprintf('Adjust the acceptable range of pupil luminance for the area detection algorithm\n\nHigher values result in more points for more acurate selection (takes longer to compute)');
-        %set(TrackSenseedit,'TooltipString',TrackSensetooltip);
-    
-    
+
     %create Edits for Re perform processing  
     
     %Number of rays
@@ -131,9 +112,6 @@ function runPupilPostProcessing
     limit = uicontrol('Parent',gui,'Style','edit','ForegroundColor',[0 0 1],'String',3000,'FontSize',10,'Units','normalized','Position', [.67 .29 .06 .06]);
     uicontrol('Parent',gui,'Style', 'pushbutton','Tag','now', 'String', 'Remove Faulty Area Calculations','FontSize',10,'Units','normalized','Position', [.55 .35 .3 .06],'Callback', @removeOutliers);
     
-    
-    
-    
     % save and close button
     uicontrol('Parent',gui,'Style', 'pushbutton', 'String', 'Undo','BackgroundColor',[.3 .3 .3],'Units','normalized','Position', [.7 .203 .2 .06],'Callback', {@Undo,'load'});
     uicontrol('Parent',gui,'Style', 'pushbutton', 'String', 'Load','BackgroundColor',[.3 .3 .9],'Units','normalized','Position', [.7 .142 .2 .06],'Callback', @LoadEyetracking);
@@ -147,7 +125,7 @@ function runPupilPostProcessing
    
     % push buttons for setting start end stop frame individually or both in one go    
     uicontrol('Parent',gui,'Style', 'pushbutton','BackgroundColor',Eyecolor,'ForegroundColor',Eyetextcolor1, 'String', 'Start Frame','FontSize',10,'Value',intCurrentFrame,'Units','normalized','Position', [.02 .14 .17 .05],'Callback', {@setFrame,'start'});
-    uicontrol('Parent',gui,'Style', 'pushbutton','BackgroundColor',Eyecolor,'ForegroundColor',Eyetextcolor1, 'String', 'End Frame','FontSize',10,'Value',intCurrentFrame,'Units','normalized','Position', [.25 .14 .14 .05],'Callback', {@setFrame,'end'});
+    uicontrol('Parent',gui,'Style', 'pushbutton','BackgroundColor',Eyecolor,'ForegroundColor',Eyetextcolor1, 'String', 'End Frame','FontSize',10,'Value',intCurrentFrame,'Units','normalized','Position', [.25 .14 .17 .05],'Callback', {@setFrame,'end'});
     uicontrol('Parent',gui,'Style','pushbutton','BackgroundColor',Eyecolor,'ForegroundColor',Eyetextcolor1, 'String', 'Time-Frame Selection','FontSize',10,'Value',intCurrentFrame,'Units','normalized','Position', [.02 .08 .4 .05],'Callback', @SelectFramePupilDetect);
     uicontrol('Parent',gui,'Style', 'pushbutton','BackgroundColor',Eyecolor,'ForegroundColor',Eyetextcolor1, 'String', 'First Frame','FontSize',10,'Value',1,'Units','normalized','Position', [.02 .02 .17 .05],'Callback', {@setFrame,'start'});
     uicontrol('Parent',gui,'Style', 'pushbutton','BackgroundColor',Eyecolor,'ForegroundColor',Eyetextcolor1, 'String', 'Last Frame','FontSize',10,'Value',size(vecArea,2),'Units','normalized','Position', [.25 .02 .17 .05],'Callback', {@setFrame,'end'});
@@ -164,7 +142,6 @@ function runPupilPostProcessing
     % This code uses dot notation to set properties.
     % Dot notation runs in R2014b and later.
     % For R2014a and earlier: set(f,'Visible','on');
-
 
     function plotframe(hObject,~)
         if isstruct(hObject)
@@ -474,6 +451,7 @@ function runPupilPostProcessing
         Qcfg = cfg;
         Qcfg.sOldEyeTracking = sEyeTracking;
         Qcfg.FileSavePath = cfg.FileSavePath;
+        Qcfg.strPupilColor = sEyeTracking.strPupilColor;
         Qcfg.CroppedVideo = [Qcfg.FileSavePath sprintf('%s_%s%s','croppedvideo',Qcfg.strSes,Qcfg.strRec) '.mat'];
         Qcfg.PrePro = false;
         Qcfg.Eyetrack.CropFrame = sEyeTracking.Frame;
