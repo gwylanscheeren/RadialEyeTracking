@@ -21,7 +21,6 @@
 %           and center point detection; If both are accurate a higher
 %           value can be chosen.
 %           
-%              
 %
 %   OUTPUT
 %       sEyeTracking: struct containing the following fields
@@ -43,21 +42,22 @@
 %       Statistics Toolbox
 %       fitellipse
 %       frst2d
-%
-%   VERSIONS
-%       Adapted by Gwylan Scheeren |21|3|2015| Universiteit van Amsterdam
-%       18-4-2015 Added ROI selection mask
-%       12-7-2015 Changed minimal number of pixels threshold for pupil requirement of 3.3%
-%               from whole frame to 3.3% of the region of interest
-%       Modified by Stephan Grzelkowski (07/03/2016) Universiteit van Amsterdam 
-%               Changed pupil detection method using Sobel Transform for
-%               edge detection and a starburst approach
-%     
-%      
 
 
-function sEyeTracking = FramePupilDetectStarburst(cfg,N,radii,o)
+function sEyeTracking = FramePupilDetect(cfg,N,radii,o)
 t = tic; 
+
+%Initialize default settings
+if nargin < 2
+    N = 16;
+    radii = 5:2:21;
+    o = 2;
+elseif nargin < 3
+    radii = 5:2:21;
+    o = 2;
+elseif nargin < 4
+    o = 2;
+end    
 
 %Preassign directional filters for Sobel filtering
 filterX = [-1 0 1;-2 0 2;-1 0 1];
@@ -73,8 +73,8 @@ else
 end
 
 %Load video data 
+fprintf('Loading in cropped video data..\n')
 sLoad = load(cfg.CroppedVideo);
-
 
 CropFrame = cfg.Eyetrack.CropFrame;
 FirstEyetrackFrameOffset = CropFrame(1)-1;
@@ -84,7 +84,6 @@ if isfield(cfg.Eyetrack,'TimeFrame')
 else
     TimeFrame = [1 CropFrame(2)-CropFrame(1)+1];
 end
-
 
 % determine the cut -off point that was used in the pre-processing step of cropping the movie size- and time-wise
 intFrames = TimeFrame(2)-TimeFrame(1)+1;
@@ -110,15 +109,14 @@ clear sLoad
 % pre allocate for gaussian filter
 matMovie_h = zeros(size(matMovie));
 
-
 % apply gaussian filter for every frame
+fprintf('Applying Gaussian filter to all frames..\n');
+hFilt = fspecial('gaussian', [3 3], 1);
 for f = 1 : size(matMovie,3)
-    matMovie_h(:,:,f) = imgaussfilt(matMovie(:,:,f),2);
+    matMovie_h(:,:,f) = imfilter(matMovie(:,:,f), hFilt);
 end
 
-
 %pre-allocate output
-
 vecPosX(FrameStart:FrameStop) = nan(1,intFrames);
 vecPosY(FrameStart:FrameStop) = nan(1,intFrames);
 vecArea(FrameStart:FrameStop) = nan(1,intFrames);
@@ -126,42 +124,44 @@ vecZ(FrameStart:FrameStop,:) = NaN(size(matMovie,3),2);
 vecA(FrameStart:FrameStop) = NaN(size(matMovie,3),1);
 vecB(FrameStart:FrameStop) = NaN(size(matMovie,3),1);
 vecAlpha(FrameStart:FrameStop) = NaN(size(matMovie,3),1);
-
-
 [m,n,~] = size(matMovie);
     
 %create meshgrid with size equal to the selected area
-
 intFrames = TimeFrame(2)-TimeFrame(1)+1;
 
 %Init current progress for progress display
-curProg = 5;
+curProg = 0;
+figure(1);
+
 %loop through frames for detection
+fprintf('Starting pupil detection..\n')
 for k = FrameStart : FrameStop
     
     %apply the ROI mask to the current frame 
     matFrame = ROImask.*mat2gray(matMovie_h(:,:,k));
     
     %apply radial transform on the current frame
-    f = frst2d(matFrame,radii,10, 0.25, 'bright');
+    if strcmp(cfg.strPupilColor, 'white')
+        f = frst2d(matFrame,radii,10, 0.25, 'bright');
+    elseif strcmp(cfg.strPupilColor, 'black')
+        f = frst2d(matFrame,radii,10, 0.25, 'dark');
+    else
+        error('strPupilColor should be set to white or black');
+    end
     
     %find the center point of the pupil from symmetry transform
     [cy,cx] = find(f == max(max(f)));
-    
-    
     [x,y] = meshgrid(1:n,1:m);
 
     %center meshgrid for the centerpoint of the symmetry transform
     x = x - cx;
     y = y - cy;
     
-    
     %polar transform around center point
     [theta,rho] = cart2pol(x,y);
     
     
     %% Ray Projection
-    
     
     %preassign matrices for sobel thressholding and intersect coordinates
     idx_threshhold = NaN(N,1);
@@ -181,7 +181,6 @@ for k = FrameStart : FrameStop
         
         %remove indeces that lie outside ROI
         idxRay = idxRay(rayInt ~= 0);
-        
         
         %apply directional filters for sobel transform (edge detection)
         Sx = imfilter(matFrame,filterX);
@@ -203,8 +202,6 @@ for k = FrameStart : FrameStop
         idx_rest = idx_sort(rest);
         idx_thresh = idx_rest(S(idx_rest) == max(S(idx_rest)));
         
-
-        
         if ~isempty(idx_thresh)
             idx_threshhold(j) = idx_thresh(1);
             dist(j) = rho(idx_thresh(1));
@@ -212,7 +209,7 @@ for k = FrameStart : FrameStop
             ycoord(j) = y(idx_thresh(1));
         end
         
-        %update n
+        %increment counter
         j = j + 1;
         
     end
@@ -232,8 +229,6 @@ for k = FrameStart : FrameStop
     %Decenter the data back to original coordinates
     xcoord = xcoord + cx;
     ycoord = ycoord + cy;
-    
-    
     
     %store coordinates in ellipse for fit function
     ellipse_coord = NaN(2,length(xcoord));
@@ -262,37 +257,40 @@ for k = FrameStart : FrameStop
 
     end
     
-    
-    %Print progress in command window 
+    %Print progress in command window and plot intermittend result
     progress = round(((k - FrameStart + 1) / intFrames) * 100);
-    
-    if (mod(progress,5) == 0) && progress == curProg 
-        fprintf('%d%% of the pupil detection has been completed\n',progress)
+    if progress == curProg
         curProg = curProg + 5;
+        fprintf('%d%% of the pupil detection has been completed\n',progress)
+        figure(1); hold on; 
+        imagesc(matMovie_h(:,:,k)); 
+        colormap('grey'); axis ij; axis off;
+        scatter(ellipse_coord(1,:),ellipse_coord(2,:),'xg');
+        h = plotellipse(z,a,b,alpha);
+        set(h, 'LineWidth', 2, 'Color', [1 0 0]);
+        title(sprintf('Frame %d of %d [%d%%]', k, intFrames, progress));
+        hold off;
+        pause(0.1);
     end
      
 end
 
-
-
-
 %put in output structure
-sNewEyeTracking = struct();
-sNewEyeTracking.strSes = cfg.strSes;
-sNewEyeTracking.strRec = cfg.strRec;
-sNewEyeTracking.intRec = str2double(cfg.strRec(end-1:end));
-sNewEyeTracking.vecZ = vecZ; 
-sNewEyeTracking.vecPosX = vecPosX;
-sNewEyeTracking.vecPosY = vecPosY;
-sNewEyeTracking.vecA = vecA;
-sNewEyeTracking.vecB = vecB;
-sNewEyeTracking.vecArea = vecArea;
-sNewEyeTracking.Frame = CropFrame;
-sNewEyeTracking.vecAlpha = vecAlpha;
+sEyeTracking = struct();
+sEyeTracking.strSes = cfg.strSes;
+sEyeTracking.strRec = cfg.strRec;
+sEyeTracking.intRec = str2double(cfg.strRec(end-1:end));
+sEyeTracking.vecZ = vecZ; 
+sEyeTracking.vecPosX = vecPosX;
+sEyeTracking.vecPosY = vecPosY;
+sEyeTracking.vecA = vecA;
+sEyeTracking.vecB = vecB;
+sEyeTracking.vecArea = vecArea;
+sEyeTracking.Frame = CropFrame;
+sEyeTracking.vecAlpha = vecAlpha;
+sEyeTracking.strPupilColor = cfg.strPupilColor;
 
-
-sEyeTracking = sNewEyeTracking;
-toc 
+close(1);
 strDuration = sec2hmsstring(t);
 fprintf('Finished processing %s%s in %s [%s]\n',cfg.strSes,cfg.strRec,strDuration,getTime);
 

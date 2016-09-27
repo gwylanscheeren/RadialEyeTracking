@@ -1,27 +1,16 @@
 %BuildPreProBatch Generates Queue-file by checking the source directory and all its sub-directories for (eye-tracking) video's
 %     Queue-file is then populated with metadata needed for preprocessing
 % 
-%   EYE-TRACKING PIPELINE
-%     BuildPreProBatch -> getMovieROI
-%          |
-%     BatchProcess ---> RunEyeDetectPrePro
-%          |        |
-%          |        |   -> (detectStartStop)
-%          |        |   -> (getPupilColor)
-%          |        --> FramePupilDetect
-%          |
-%     runCreatePreDataAggregate -> getResampledEyeTrackingData
-%                               -> buildMultiSesAggregate
 %
 %   SYNTAX
 %     BuildPreProBatch
 %
 %   INPUT
-%     set the appropriate directories and filename for Queue file
-%     sourceDirectory: the general Eye-Tracking directory
-%     sParams.strRawVideoPath: where the raw video's are located
-%     sParams.QueuePath (optional, default: sourceDirectory): set directory to save queuefile to a directory other than sourceDirectory
-%     sParams.SaveName: specify the filename for the Queuefile
+%     rootDirectory: the general Eye-Tracking directory
+%     strPupilColor: set to 'black' when the pupil is illuminated by an infra-red light source 
+%                    and appears black on the video. Set to 'white' when using two-photon imaging 
+%                    and the IR light source is the laser of the two-photon scanner, 
+%                    making the pupil appear white on the video.
 %
 %   OUTPUT
 %     Creates a queue-file according to set filename (sParams.SaveName) in the directory specified in (sParams.QueuePath)
@@ -29,25 +18,22 @@
 %   DEPENDS ON
 %     getAllFiles
 %     getMovieROI
-%
-%   VERSIONS
-%     Created by Gwylan Scheeren |8|11|2015| Universiteit van Amsterdam
-%     Modified by Gwylan Scheeren |26|11|2015| Universiteit van Amsterdam
 
 function BuildPreProBatch
 % set Directories
-sourceDirectory = 'D:\Stage\BehaviourEyeTrackData\';
-sParams.strRawVideoPath = 'D:\Stage\BehaviourEyeTrackData\Raw\';
-sParams.saveDirectory = [sourceDirectory 'CroppedVideos\']; %# save directory to put cropped videos in
-sParams.QueuePath = 'D:\Stage\BehaviourEyeTrackData\'; %# directory to save queue file in, if 'commented out' the 'sourceDirectory' is used.
+rootDirectory = 'D:\Stage\BehaviourEyeTrackData\';
+sParams.strRawVideoPath = [rootDirectory 'Raw\'];
+sParams.saveDirectory = [rootDirectory 'CroppedVideos\']; %# save directory to put cropped videos in
+sParams.QueuePath = rootDirectory; %# directory to save queue file in, if 'commented out' the 'sourceDirectory' is used.
 sParams.SaveName = 'Queuefile';
 
 %set parameters
-sParams.boolQueueEntryOverwrite = 0;
+sParams.boolQueueEntryOverwrite = false;
+sParams.strPupilColor = 'white'; %white or black
 
 % Initialize values
 if ~exist('sParams.QueuePath','var')
-    sParams.QueuePath = sourceDirectory;
+    sParams.QueuePath = rootDirectory;
 end
 
 %% generate file list from main- and sub- directories, restructure and remove all non-movie files
@@ -92,6 +78,7 @@ for i = 1:size(flist,1)
     if sParams.boolQueueEntryOverwrite || (~sParams.boolQueueEntryOverwrite && isempty(indQueue))
         %prepare Qcfg struct
         Qcfg.PrePro = true;
+        Qcfg.strPupilColor = sParams.strPupilColor;
         pathparts = regexp(Files(i).filename, '\', 'split');
         Qcfg.strSes = pathparts{end-1};
         Qcfg.strRec = pathparts{end}(end-8:end-4);
