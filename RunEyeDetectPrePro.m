@@ -30,18 +30,6 @@
 %     Modified by Guido Meijer |09|02|2016| Universiteit van Amsterdam
 
 function [sVideoAll, matMovie] = RunEyeDetectPrePro(cfg)
-tic;
- % Update or create progressbars
-    if exist('progressbar','file')
-        status = progressbar('status');
-        currenttext = sprintf('PreProcessing session %s%s',cfg.strSes,cfg.strRec);
-        if ~isempty(status.progfig)
-                progressbar('changelabel',3,currenttext); % Change label of bar that indicate this session's progress
-                progressbar([],[],[],0,0);
-        else
-            progressbar(currenttext,'Cropping video','Concatenating files'); % Init 3 bars
-        end
-    end
 
 %% Preproces
 strSes = cfg.strSes;

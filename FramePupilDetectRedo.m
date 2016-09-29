@@ -103,8 +103,8 @@ clear sLoad
 matMovie_h = zeros(size(matMovie));
 
 % apply gaussian filter for every frame
-fprintf('Applying Gaussian filter to all frames..\n');
-hFilt = fspecial('gaussian', [3 3], 1);
+fprintf('Applying Gaussian filter to selected frames..\n');
+hFilt = fspecial('gaussian', [5 5], 2);
 for f = 1 : size(matMovie,3)
     matMovie_h(:,:,f) = imfilter(matMovie(:,:,f), hFilt);
 end
@@ -124,6 +124,7 @@ vecAlpha = cfg.sOldEyeTracking.vecAlpha;
 curProg = 0;
 
 %loop through frames for detection
+fprintf('Starting pupil detection..\n')
 for k = FrameStart : FrameStop
     
     if ~isnan(vecArea(k))
@@ -240,7 +241,7 @@ for k = FrameStart : FrameStop
         end
 
         %Print progress in command window
-        progress = round(((k - FrameStart + 1) / intFrames) * 100);
+        progress = round(((k - FrameStart + 1) / length(FrameStart:FrameStop)) * 100);
         if progress == curProg
             curProg = curProg + 5;
             fprintf('%d%% of the pupil detection has been completed\n',progress)
@@ -249,6 +250,7 @@ for k = FrameStart : FrameStop
     end
 
 end
+fprintf('Completed eye-tracking of selected frames\n');
 
 %put in output structure
 sEyeTracking = struct();
@@ -263,7 +265,7 @@ sEyeTracking.vecB = vecB;
 sEyeTracking.vecArea = vecArea;
 sEyeTracking.Frame = CropFrame;
 sEyeTracking.vecAlpha = vecAlpha;
-
+sEyeTracking.strPupilColor = cfg.strPupilColor;
 
 % restore warnings
 warning('on','all')
