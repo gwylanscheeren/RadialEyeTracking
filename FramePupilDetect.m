@@ -111,7 +111,7 @@ matMovie_h = zeros(size(matMovie));
 
 % apply gaussian filter for every frame
 fprintf('Applying Gaussian filter to all frames..\n');
-hFilt = fspecial('gaussian', [3 3], 1);
+hFilt = fspecial('gaussian', [5 5], 2);
 for f = 1 : size(matMovie,3)
     matMovie_h(:,:,f) = imfilter(matMovie(:,:,f), hFilt);
 end
@@ -263,7 +263,7 @@ for k = FrameStart : FrameStop
         curProg = curProg + 5;
         fprintf('%d%% of the pupil detection has been completed\n',progress)
         figure(1); hold on; 
-        imagesc(matMovie_h(:,:,k)); 
+        imagesc(matMovie(:,:,k)); 
         colormap('grey'); axis ij; axis off;
         scatter(ellipse_coord(1,:),ellipse_coord(2,:),'xg');
         h = plotellipse(z,a,b,alpha);
